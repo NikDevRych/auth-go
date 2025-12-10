@@ -1,0 +1,24 @@
+package user
+
+import (
+	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type User struct {
+	ID           uuid.UUID
+	Email        string
+	PasswordHash string
+}
+
+func New(email, password string) (*User, error) {
+	hashBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	return &User{
+		Email:        email,
+		PasswordHash: string(hashBytes),
+	}, nil
+}
