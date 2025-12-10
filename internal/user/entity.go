@@ -22,3 +22,7 @@ func New(email, password string) (*User, error) {
 		PasswordHash: string(hashBytes),
 	}, nil
 }
+
+func (u *User) isPasswordMatch(password string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
+}
