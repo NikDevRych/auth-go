@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/NikDevRych/auth-go/internal/auth"
+	"github.com/NikDevRych/auth-go/internal/refreshtoken"
 )
 
 var (
@@ -12,7 +13,8 @@ var (
 )
 
 type service struct {
-	repo Repository
+	repo       Repository
+	refreshSvc refreshtoken.Service
 }
 
 func NewService(repo Repository) *service {
@@ -28,20 +30,33 @@ func (s *service) SignUp(ctx context.Context, req *UserDataRequest) error {
 	return s.repo.Create(ctx, user)
 }
 
-func (s *service) SignIn(ctx context.Context, req *UserDataRequest) (string, error) {
+func (s *service) SignIn(ctx context.Context, req *UserDataRequest) (*auth.TokenResponse, error) {
 	user, err := s.repo.FindByEmail(ctx, req.Email)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if !user.isPasswordMatch(req.Password) {
-		return "", ErrInvalidCredentials
+		return nil, ErrInvalidCredentials
 	}
 
-	token, err := auth.CreateToken(user.Email)
+	accessToken, err := auth.CreateToken(user.Email)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return token, nil
+	refreshToken, err := s.refreshSvc.NewRefreshToken(ctx, user.ID.String())
+	if err != nil {
+		return nil, err
+	}
+
+	tokenResponse := &auth.TokenResponse{
+		AccessToken: accessToken,
+		RefreshToken: auth.RefreshTokenResponse{
+			RefreshToken: refreshToken.Token,
+			ExpireAt:     refreshToken.ExpireAt,
+		},
+	}
+
+	return tokenResponse, nil
 }
