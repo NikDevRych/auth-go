@@ -35,6 +35,7 @@ func main() {
 
 	mux.HandleFunc("POST /signup", handler.SignUp)
 	mux.HandleFunc("POST /signin", handler.SignIn)
+	mux.HandleFunc("POST /refresh", handler.RefreshAccessToken)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }

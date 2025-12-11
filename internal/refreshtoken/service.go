@@ -18,3 +18,7 @@ func (s *Service) NewRefreshToken(ctx context.Context, userId string) (*RefreshT
 
 	return token, nil
 }
+
+func (s *Service) FindByToken(ctx context.Context, token string) (*RefreshToken, error) {
+	return s.repo.FindByToken(ctx, token)
+}

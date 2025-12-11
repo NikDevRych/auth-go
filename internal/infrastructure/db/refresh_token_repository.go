@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/NikDevRych/auth-go/internal/refreshtoken"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -32,4 +33,23 @@ func (r *refreshTokenRepository) CreateOrUpdate(ctx context.Context, token *refr
 	}
 
 	return nil
+}
+
+func (r *refreshTokenRepository) FindByToken(ctx context.Context, token string) (*refreshtoken.RefreshToken, error) {
+	const query = `
+		SELECT user_id, token, expire_at, created_at
+		FROM refresh_tokens
+		WHERE token = $1
+	`
+
+	var refreshToken refreshtoken.RefreshToken
+	err := r.dbpool.QueryRow(ctx, query, token).Scan(&refreshToken.UserId, &refreshToken.Token, &refreshToken.ExpireAt, &refreshToken.CreateAt)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &refreshToken, nil
 }
