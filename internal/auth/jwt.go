@@ -6,7 +6,7 @@ import (
 
 var jwtTokenKey = "some-jwt-token-key-only-for-test"
 
-func CreateToken(email string) (string, error) {
+func CreateToken() (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	signedToken, err := token.SignedString([]byte(jwtTokenKey))
 	if err != nil {

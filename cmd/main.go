@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/NikDevRych/auth-go/internal/infrastructure/db"
+	"github.com/NikDevRych/auth-go/internal/refreshtoken"
 	"github.com/NikDevRych/auth-go/internal/user"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -26,12 +27,15 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	repo := db.NewUserRepository(dbpool)
-	service := user.NewService(repo)
-	handler := user.NewHandler(service)
+	refreshRepo := db.NewRefreshTokenRepository(dbpool)
+	userRepo := db.NewUserRepository(dbpool)
+	refreshService := refreshtoken.NewService(refreshRepo)
+	userService := user.NewService(userRepo, refreshService)
+	handler := user.NewHandler(userService)
 
 	mux.HandleFunc("POST /signup", handler.SignUp)
 	mux.HandleFunc("POST /signin", handler.SignIn)
+	mux.HandleFunc("POST /refresh", handler.RefreshAccessToken)
 
 	log.Fatal(http.ListenAndServe(":8080", mux))
 }
