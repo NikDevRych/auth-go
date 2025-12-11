@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/NikDevRych/auth-go/internal/auth"
+	"github.com/NikDevRych/auth-go/internal/config"
 	"github.com/NikDevRych/auth-go/internal/refreshtoken"
 )
 
@@ -14,12 +15,17 @@ var (
 )
 
 type service struct {
+	cfg        *config.Config
 	repo       Repository
 	refreshSvc *refreshtoken.Service
 }
 
-func NewService(userRepo Repository, refreshSvc *refreshtoken.Service) *service {
-	return &service{repo: userRepo, refreshSvc: refreshSvc}
+func NewService(cfg *config.Config, userRepo Repository, refreshSvc *refreshtoken.Service) *service {
+	return &service{
+		cfg:        cfg,
+		repo:       userRepo,
+		refreshSvc: refreshSvc,
+	}
 }
 
 func (s *service) SignUp(ctx context.Context, req *UserDataRequest) error {
@@ -41,7 +47,7 @@ func (s *service) SignIn(ctx context.Context, req *UserDataRequest) (*auth.Token
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, err := auth.CreateToken()
+	accessToken, err := auth.CreateToken(s.cfg.JWTSecretKey)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +78,7 @@ func (s *service) RefreshAccessToken(ctx context.Context, req *auth.RefreshToken
 		return nil, ErrInvalidCredentials
 	}
 
-	accessToken, err := auth.CreateToken()
+	accessToken, err := auth.CreateToken(s.cfg.JWTSecretKey)
 	if err != nil {
 		return nil, err
 	}
