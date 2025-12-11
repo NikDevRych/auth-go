@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/NikDevRych/auth-go/internal/config"
 	"github.com/NikDevRych/auth-go/internal/infrastructure/db"
 	"github.com/NikDevRych/auth-go/internal/refreshtoken"
 	"github.com/NikDevRych/auth-go/internal/user"
@@ -13,9 +14,9 @@ import (
 
 func main() {
 	ctx := context.Background()
+	cfg := config.NewConfig()
 
-	urlExample := "postgres://postgres:postgres@localhost:5432/auth_go_db"
-	dbpool, err := pgxpool.New(ctx, urlExample)
+	dbpool, err := pgxpool.New(ctx, cfg.ConnectionString)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,7 +31,7 @@ func main() {
 	refreshRepo := db.NewRefreshTokenRepository(dbpool)
 	userRepo := db.NewUserRepository(dbpool)
 	refreshService := refreshtoken.NewService(refreshRepo)
-	userService := user.NewService(userRepo, refreshService)
+	userService := user.NewService(cfg, userRepo, refreshService)
 	handler := user.NewHandler(userService)
 
 	mux.HandleFunc("POST /signup", handler.SignUp)
