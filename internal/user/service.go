@@ -14,11 +14,11 @@ var (
 
 type service struct {
 	repo       Repository
-	refreshSvc refreshtoken.Service
+	refreshSvc *refreshtoken.Service
 }
 
-func NewService(repo Repository) *service {
-	return &service{repo: repo}
+func NewService(userRepo Repository, refreshSvc *refreshtoken.Service) *service {
+	return &service{repo: userRepo, refreshSvc: refreshSvc}
 }
 
 func (s *service) SignUp(ctx context.Context, req *UserDataRequest) error {
